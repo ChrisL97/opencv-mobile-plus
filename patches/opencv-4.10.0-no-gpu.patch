@@ -2911,3 +2911,115 @@ diff -Nuarp opencv-4.10.0.orig/modules/video/src/camshift.cpp opencv-4.10.0/modu
  
      double m00 = m.m00, m10 = m.m10, m01 = m.m01;
      double mu11 = m.mu11, mu20 = m.mu20, mu02 = m.mu02;
+diff -Nuarp opencv-4.10.0.orig/modules/calib3d/perf/opencl/perf_stereobm.cpp opencv-4.10.0/modules/calib3d/perf/opencl/perf_stereobm.cpp
+--- opencv-4.10.0.orig/modules/calib3d/perf/opencl/perf_stereobm.cpp
++++ opencv-4.10.0/modules/calib3d/perf/opencl/perf_stereobm.cpp
+@@ -54,7 +54,7 @@ typedef TestBaseWithParam<StereoBMFixture_t> StereoBMFixture;
+ OCL_PERF_TEST_P(StereoBMFixture, StereoBM, ::testing::Combine(OCL_PERF_ENUM(32, 64, 128), OCL_PERF_ENUM(11,21) ) )
+ {
+     const int n_disp = get<0>(GetParam()), winSize = get<1>(GetParam());
+-    UMat left, right, disp;
++    Mat left, right, disp;
+ 
+     imread(getDataPath("gpu/stereobm/aloe-L.png"), IMREAD_GRAYSCALE).copyTo(left);
+     imread(getDataPath("gpu/stereobm/aloe-R.png"), IMREAD_GRAYSCALE).copyTo(right);
+diff -Nuarp opencv-4.10.0.orig/modules/calib3d/src/chessboard.cpp opencv-4.10.0/modules/calib3d/src/chessboard.cpp
+--- opencv-4.10.0.orig/modules/calib3d/src/chessboard.cpp
++++ opencv-4.10.0/modules/calib3d/src/chessboard.cpp
+@@ -703,7 +703,7 @@ void FastX::detectImpl(const cv::Mat& _gray_image,
+     CV_CheckTypeEQ(_gray_image.type(), CV_8UC1, "Unsupported image type");
+ 
+     // up-sample if needed
+-    cv::UMat gray_image;
++    cv::Mat gray_image;
+     const int super_res = int(parameters.super_resolution);
+     if(super_res)
+         cv::resize(_gray_image,gray_image,cv::Size(),2,2);
+@@ -727,9 +727,9 @@ void FastX::detectImpl(const cv::Mat& _gray_image,
+             int scale_id = scale-parameters.min_scale;
+             int scale_size = int(pow(2.0,scale+1+super_res));
+             int scale_size2 = int((scale_size/7)*2+1);
+-            std::vector<cv::UMat> images;
++            std::vector<cv::Mat> images;
+             images.resize(2*num);
+-            cv::UMat rotated,filtered_h,filtered_v;
++            cv::Mat rotated,filtered_h,filtered_v;
+             cv::boxFilter(gray_image,images[0],-1,cv::Size(scale_size,scale_size2));
+             cv::boxFilter(gray_image,images[num],-1,cv::Size(scale_size2,scale_size));
+             for(int i=1;i<num;++i)
+diff -Nuarp opencv-4.10.0.orig/modules/calib3d/src/stereobm.cpp opencv-4.10.0/modules/calib3d/src/stereobm.cpp
+--- opencv-4.10.0.orig/modules/calib3d/src/stereobm.cpp
++++ opencv-4.10.0/modules/calib3d/src/stereobm.cpp
+@@ -112,9 +112,9 @@ static bool ocl_prefilter_norm(InputArray _input, OutputArray _output, int winsi
+     int scale_g = winsize*winsize/8, scale_s = (1024 + scale_g)/(scale_g*2);
+     scale_g *= scale_s;
+ 
+-    UMat input = _input.getUMat(), output;
++    Mat input = _input.getMat(), output;
+     _output.create(input.size(), input.type());
+-    output = _output.getUMat();
++    output = _output.getMat();
+ 
+     size_t globalThreads[3] = { (size_t)input.cols, (size_t)input.rows, 1 };
+ 
+@@ -195,9 +195,9 @@ static bool ocl_prefilter_xsobel(InputArray _input, OutputArray _output, int pre
+     if(k.empty())
+         return false;
+ 
+-    UMat input = _input.getUMat(), output;
++    Mat input = _input.getMat(), output;
+     _output.create(input.size(), input.type());
+-    output = _output.getUMat();
++    output = _output.getMat();
+ 
+     size_t globalThreads[3] = { (size_t)input.cols, (size_t)input.rows, 1 };
+ 
+@@ -1027,13 +1027,13 @@ static bool ocl_stereobm( InputArray _left, InputArray _right,
+     if(k.empty())
+         return false;
+ 
+-    UMat left = _left.getUMat(), right = _right.getUMat();
++    Mat left = _left.getMat(), right = _right.getMat();
+     int cols = left.cols, rows = left.rows;
+ 
+     _disp.create(_left.size(), CV_16S);
+     _disp.setTo((mindisp - 1) << 4);
+     Rect roi = Rect(Point(wsz2 + mindisp + ndisp - 1, wsz2), Point(cols-wsz2-mindisp, rows-wsz2) );
+-    UMat disp = (_disp.getUMat())(roi);
++    Mat disp = (_disp.getMat())(roi);
+ 
+     int globalX = (disp.cols + sizeX - 1) / sizeX,
+         globalY = (disp.rows + sizeY - 1) / sizeY;
+@@ -1207,9 +1207,9 @@ public:
+         int FILTERED = (params.minDisparity - 1) << disp_shift;
+ 
+ #ifdef HAVE_OPENCL
+-        if(ocl::isOpenCLActivated() && disparr.isUMat() && params.textureThreshold == 0)
++        if(ocl::isOpenCLActivated() && disparr.isMat() && params.textureThreshold == 0)
+         {
+-            UMat left, right;
++            Mat left, right;
+             if(ocl_prefiltering(leftarr, rightarr, left, right, &params))
+             {
+                 if(ocl_stereobm(left, right, disparr, &params))
+@@ -1220,7 +1220,7 @@ public:
+                     if (params.useFilterSpeckles())
+                         filterSpeckles(disparr.getMat(), FILTERED, params.speckleWindowSize, params.speckleRange, slidingSumBuf);
+                     if (dtype == CV_32F)
+-                        disparr.getUMat().convertTo(disparr, CV_32FC1, 1./(1 << disp_shift), 0);
++                        disparr.getMat().convertTo(disparr, CV_32FC1, 1./(1 << disp_shift), 0);
+                     CV_IMPL_ADD(CV_IMPL_OCL);
+                     return;
+                 }
+diff -Nuarp opencv-4.10.0.orig/modules/calib3d/test/opencl/test_stereobm.cpp opencv-4.10.0/modules/calib3d/test/opencl/test_stereobm.cpp
+--- opencv-4.10.0.orig/modules/calib3d/test/opencl/test_stereobm.cpp
++++ opencv-4.10.0/modules/calib3d/test/opencl/test_stereobm.cpp
+@@ -54,7 +54,7 @@ PARAM_TEST_CASE(StereoBMFixture, int, int)
+     int n_disp;
+     int winSize;
+     Mat left, right, disp;
+-    UMat uleft, uright, udisp;
++    Mat uleft, uright, udisp;
+ 
+     virtual void SetUp()
+     {
