@@ -2911,18 +2911,6 @@ diff -Nuarp opencv-4.10.0.orig/modules/video/src/camshift.cpp opencv-4.10.0/modu
  
      double m00 = m.m00, m10 = m.m10, m01 = m.m01;
      double mu11 = m.mu11, mu20 = m.mu20, mu02 = m.mu02;
-diff -Nuarp opencv-4.10.0.orig/modules/calib3d/perf/opencl/perf_stereobm.cpp opencv-4.10.0/modules/calib3d/perf/opencl/perf_stereobm.cpp
---- opencv-4.10.0.orig/modules/calib3d/perf/opencl/perf_stereobm.cpp
-+++ opencv-4.10.0/modules/calib3d/perf/opencl/perf_stereobm.cpp
-@@ -54,7 +54,7 @@ typedef TestBaseWithParam<StereoBMFixture_t> StereoBMFixture;
- OCL_PERF_TEST_P(StereoBMFixture, StereoBM, ::testing::Combine(OCL_PERF_ENUM(32, 64, 128), OCL_PERF_ENUM(11,21) ) )
- {
-     const int n_disp = get<0>(GetParam()), winSize = get<1>(GetParam());
--    UMat left, right, disp;
-+    Mat left, right, disp;
- 
-     imread(getDataPath("gpu/stereobm/aloe-L.png"), IMREAD_GRAYSCALE).copyTo(left);
-     imread(getDataPath("gpu/stereobm/aloe-R.png"), IMREAD_GRAYSCALE).copyTo(right);
 diff -Nuarp opencv-4.10.0.orig/modules/calib3d/src/chessboard.cpp opencv-4.10.0/modules/calib3d/src/chessboard.cpp
 --- opencv-4.10.0.orig/modules/calib3d/src/chessboard.cpp
 +++ opencv-4.10.0/modules/calib3d/src/chessboard.cpp
@@ -3011,15 +2999,3 @@ diff -Nuarp opencv-4.10.0.orig/modules/calib3d/src/stereobm.cpp opencv-4.10.0/mo
                      CV_IMPL_ADD(CV_IMPL_OCL);
                      return;
                  }
-diff -Nuarp opencv-4.10.0.orig/modules/calib3d/test/opencl/test_stereobm.cpp opencv-4.10.0/modules/calib3d/test/opencl/test_stereobm.cpp
---- opencv-4.10.0.orig/modules/calib3d/test/opencl/test_stereobm.cpp
-+++ opencv-4.10.0/modules/calib3d/test/opencl/test_stereobm.cpp
-@@ -54,7 +54,7 @@ PARAM_TEST_CASE(StereoBMFixture, int, int)
-     int n_disp;
-     int winSize;
-     Mat left, right, disp;
--    UMat uleft, uright, udisp;
-+    Mat uleft, uright, udisp;
- 
-     virtual void SetUp()
-     {
