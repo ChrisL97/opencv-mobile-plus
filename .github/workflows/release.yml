@@ -149,9 +149,6 @@ jobs:
     - name: package
       run: |
         mkdir ${{ env.PACKAGE_NAME }}
-        cp -rf ${{ env.SOURCE_DIR }}/build-x86/install/* ${{ env.PACKAGE_NAME }}/
-        cp -rf ${{ env.SOURCE_DIR }}/build-x86_64/install/* ${{ env.PACKAGE_NAME }}/
-        cp -rf ${{ env.SOURCE_DIR }}/build-armeabi-v7a/install/* ${{ env.PACKAGE_NAME }}/
         cp -rf ${{ env.SOURCE_DIR }}/build-arm64-v8a/install/* ${{ env.PACKAGE_NAME }}/
         zip -9 -r ${{ env.PACKAGE_NAME }}.zip ${{ env.PACKAGE_NAME }}
     - name: test-arm64-v8a
